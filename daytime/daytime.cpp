@@ -5,54 +5,52 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 using namespace std;
-
-int main ()
+#define port 13
+#define address "172.16.41.130"
+#define bufSize 512 
+int main (int argc, char **argv)
 {
-    sockaddr_in *self_addr = new (sockaddr_in);
-    self_addr->sin_family = AF_INET;
-    self_addr->sin_port = 0;
-    self_addr->sin_addr.s_addr = 0;
-
-    sockaddr_in * srv_addr = new (sockaddr_in);
-    srv_addr->sin_family = AF_INET;
-    srv_addr->sin_port = htons(13);
-    srv_addr->sin_addr.s_addr = inet_addr("172.16.40.1");
-
-    char *buf = new char[1024];
-    string str ("Сколько времени?\n");
-    int msg = str.length();
-    size_t length = str.copy(buf,msg);
-
-    int s = socket(AF_INET, SOCK_DGRAM, 0);
-    if (s == -1) {
-        exit(1);
+    sockaddr_in *cAddr = new (sockaddr_in);
+    cAddr->sin_family = AF_INET; 
+   	cAddr->sin_port = 0; 
+    cAddr->sin_addr.s_addr = 0;
+    sockaddr_in * sAddr = new (sockaddr_in);
+    sAddr->sin_family = AF_INET; 
+    sAddr->sin_port = htons(port); 
+    sAddr->sin_addr.s_addr = inet_addr(address);
+  	char *buf = new char[bufSize];
+  	string str ("Сколько времени?\n");
+  	int msgLen = str.length();
+  	size_t length = str.copy(buf,msgLen);
+    int Socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (Socket == -1) {
+         exit(1);
     }
-    int rc = bind(s, (const sockaddr *) self_addr, sizeof (sockaddr_in));
+    int rc = bind(Socket, (const sockaddr *) cAddr, sizeof (sockaddr_in));
     if (rc == -1) {
         exit(1);
     }
-    rc = connect(s, (const sockaddr*) srv_addr, sizeof(sockaddr_in));
+    rc = connect(Socket, (const sockaddr*) sAddr, sizeof(sockaddr_in));
     if (rc == -1) {
-        close(s);
+        close(Socket);
         exit(1);
     }
-    rc = send(s, buf,msg,0);
+    rc = send(Socket, buf,msgLen,0);
     if (rc == -1) {
-        close(s);
+        close(Socket);
         exit(1);
     }
-    cout << "We send: " << buf << endl;
-    rc = recv(s, buf, 1024,0);
+    cout << "Было отправлено: " << buf << endl;
+    rc = recv(Socket, buf, bufSize,0);
     if ( rc == -1) {
-        close(s);
+        close(Socket);
         exit(1);
     }
     buf[rc]='\0';
-    cout << buf << endl;
-    close(s);
-
-    delete self_addr;
-    delete srv_addr;
+    cout << "Было получено: " << buf << endl;
+    close(Socket);
+    delete cAddr;
+    delete sAddr;
     delete[] buf;
     return 0;
 }
